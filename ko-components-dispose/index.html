@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Ko items list</title>
+        <link rel="stylesheet" href="../vendor/css/bootstrap.css">
+        <link rel="stylesheet" href="../vendor/css/bootstrap-theme.css">
+        <script type="text/javascript" src="../vendor/js/jquery.js"></script>
+        <script type="text/javascript" src="../vendor/js/bootstrap.js"></script>
+        <script type="text/javascript" src="../vendor/js/amplify.js"></script>
+        <script type="text/javascript" src="../vendor/js/knockout.js"></script>
+    </head>
+    
+    <body>
+        <input type="checkbox" data-bind="checked:selectAll" />
+        <div data-bind="foreach:items">
+            <div>
+                <span data-bind="text:name"></span>
+                <input type="checkbox" data-bind="checked:selected" />
+            </div>
+        </div>
+        <script type="text/javascript">
+            var consts = {
+                events:{
+                    setState:'items.state.set'
+                }
+            };
+        
+            function item(settings){
+                var name = settings.name;
+                var selected = ko.observable(settings.selected || false);
+                
+                amplify.subscribe(consts.events.setState, updateState);
+                
+                function updateState(state) {
+                    selected(state);
+                    console.log('Subscribe in ', name);
+                }
+                
+                return {
+                    name: name,
+                    selected: selected                  
+                };
+            }
+        
+            function list(){
+                var items = ko.observableArray();
+               
+                var selectAll = ko.observable(false);
+                selectAll.subscribe(function (newVal) {
+                    amplify.publish(consts.events.setState, newVal);
+                });
+                
+                setInterval(function () {                    
+                    items([]);
+                    items.push(item({name:'Item 4', selected:true}));
+                }, 4000);
+                
+                items.push(item({name:'Item 1', selected:true}));
+                items.push(item({name:'Item 2', selected:false}));
+                items.push(item({name:'Item 3', selected:false}));
+                
+                return {
+                    items:items,
+                    selectAll:selectAll
+                };
+            }
+            
+            var model = list();
+            
+            ko.applyBindings(model);
+        </script>
+    </body>
+
+</html>
