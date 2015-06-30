@@ -10,23 +10,30 @@
         <script type="text/javascript" src="../vendor/js/bootstrap.js"></script>
         <script type="text/javascript" src="../vendor/js/amplify.js"></script>
         <script type="text/javascript" src="../vendor/js/knockout.js"></script>
+        <script type="text/javascript" src="../vendor/js/underscore.js"></script>
     </head>
     
     <body>
-        <input type="checkbox" data-bind="checked:selectAll" />
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" data-bind="checked:selectAll" />Select all</label>
+        </div>
         <div data-bind="foreach:items">
-            <div>
-                <span data-bind="text:name"></span>
-                <input type="checkbox" data-bind="checked:selected" />
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" data-bind="checked:selected" />
+                    <span data-bind="text:name"></span>
+                </label>
             </div>
         </div>
+        <input type="button" data-bind="click:change" value="Change list" />
         <script type="text/javascript">
             var consts = {
                 events:{
                     setState:'items.state.set'
                 }
             };
-        
+            
             function item(settings){
                 var name = settings.name;
                 var selected = ko.observable(settings.selected || false);
@@ -38,12 +45,16 @@
                     console.log('Subscribe in ', name);
                 }
                 
+                function dispose(){        
+                    amplify.unsubscribe(consts.events.setState, updateState);
+                }
                 return {
                     name: name,
-                    selected: selected                  
+                    selected: selected,
+                    dispose: dispose                  
                 };
             }
-        
+            
             function list(){
                 var items = ko.observableArray();
                
@@ -52,10 +63,14 @@
                     amplify.publish(consts.events.setState, newVal);
                 });
                 
-                setInterval(function () {                    
+                function change () {      
+                    _.each(items(), function(item){
+                        item.dispose();
+                    });
+                                  
                     items([]);
-                    items.push(item({name:'Item 4', selected:true}));
-                }, 4000);
+                    items.push(item({name:'Item 4', selected:false}));
+                }
                 
                 items.push(item({name:'Item 1', selected:true}));
                 items.push(item({name:'Item 2', selected:false}));
@@ -63,13 +78,14 @@
                 
                 return {
                     items:items,
-                    selectAll:selectAll
+                    selectAll:selectAll,
+                    change:change
                 };
             }
             
-            var model = list();
-            
-            ko.applyBindings(model);
+                    var model = list();
+                    
+                    ko.applyBindings(model);
         </script>
     </body>
 
